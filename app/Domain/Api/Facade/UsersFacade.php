@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Domain\Api\Facade;
 
@@ -25,135 +27,138 @@ use App\Model\Exception\Runtime\InvalidStateException;
  */
 final class UsersFacade
 {
+    public function __construct(private EntityManagerDecorator $em)
+    {
+    }
 
-	public function __construct(private EntityManagerDecorator $em)
-	{
-	}
+    /**
+     * Find users by defined criteria with order by, limit and offset features
+     *
+     * @param  array<string, mixed> $criteria User definition criteria
+     * @param  string[]             $orderBy  Order users by what column and which direction
+     * @param  int                  $limit    Return defined number of users, default is 10
+     * @param  int                  $offset   Return users from defined offset for pagination purposes
+     * @return UserResDto[] Response body
+     */
+    public function findBy(array $criteria = [], array $orderBy = ['id' => 'ASC'], int $limit = 10, int $offset = 0): array
+    {
+        $entities = $this->em->getRepository(User::class)->findBy($criteria, $orderBy, $limit, $offset);
+        $result = [];
 
-	/**
-	 * Find users by defined criteria with order by, limit and offset features
-	 * @param array<string, mixed> $criteria User definition criteria
-	 * @param string[] $orderBy Order users by what column and which direction
-	 * @param int $limit Return defined number of users, default is 10
-	 * @param int $offset Return users from defined offset for pagination purposes
-	 * @return UserResDto[] Response body
-	 */
-	public function findBy(array $criteria = [], array $orderBy = ['id' => 'ASC'], int $limit = 10, int $offset = 0): array
-	{
-		$entities = $this->em->getRepository(User::class)->findBy($criteria, $orderBy, $limit, $offset);
-		$result = [];
+        foreach ($entities as $entity) {
+            $result[] = UserResDto::from($entity);
+        }
 
-		foreach ($entities as $entity) {
-			$result[] = UserResDto::from($entity);
-		}
+        return $result;
+    }
 
-		return $result;
-	}
+    /**
+     * Return all users with pagination feature
+     *
+     * @param  int $limit  Return defined number of users, default is 10
+     * @param  int $offset Return users from defined offset for pagination purposes
+     * @return UserResDto[] Response body
+     */
+    public function findAll(int $limit = 10, int $offset = 0): array
+    {
+        return $this->findBy([], ['id' => 'ASC'], $limit, $offset);
+    }
 
-	/**
-	 * Return all users with pagination feature
-	 * @param int $limit Return defined number of users, default is 10
-	 * @param int $offset Return users from defined offset for pagination purposes
-	 * @return UserResDto[] Response body
-	 */
-	public function findAll(int $limit = 10, int $offset = 0): array
-	{
-		return $this->findBy([], ['id' => 'ASC'], $limit, $offset);
-	}
+    /**
+     * @param mixed[]  $criteria
+     * @param string[] $orderBy
+     */
+    public function findOneBy(array $criteria, ?array $orderBy = null): UserResDto
+    {
+        $entity = $this->em->getRepository(User::class)->findOneBy($criteria, $orderBy);
 
-	/**
-	 * @param mixed[] $criteria
-	 * @param string[] $orderBy
-	 */
-	public function findOneBy(array $criteria, ?array $orderBy = null): UserResDto
-	{
-		$entity = $this->em->getRepository(User::class)->findOneBy($criteria, $orderBy);
+        if ($entity === null) {
+            throw new EntityNotFoundException();
+        }
 
-		if ($entity === null) {
-			throw new EntityNotFoundException();
-		}
+        return UserResDto::from($entity);
+    }
 
-		return UserResDto::from($entity);
-	}
+    /**
+     * Find one user by defined criteria
+     *
+     * @param  int $id User ID
+     * @return UserResDto Response body
+     */
+    public function findOne(int $id): UserResDto
+    {
+        return $this->findOneBy(['id' => $id]);
+    }
 
-	/**
-	 * Find one user by defined criteria
-	 * @param int $id User ID
-	 * @return UserResDto Response body
-	 */
-	public function findOne(int $id): UserResDto
-	{
-		return $this->findOneBy(['id' => $id]);
-	}
+    /**
+     * Create new user from data provided in the request body
+     *
+     * @param  CreateUserReqDto $dto Request object
+     * @return User User Entity
+     */
+    public function create(CreateUserReqDto $dto): User
+    {
+        if ($dto->password === null) {
+            throw new InvalidStateException('Password cannot be null');
+        }
 
-	/**
-	 * Create new user from data provided in the request body
-	 * @param CreateUserReqDto $dto Request object
-	 * @return User User Entity
-	 */
-	public function create(CreateUserReqDto $dto): User
-	{
-		if($dto->password === null) {
-			throw new InvalidStateException('Password cannot be null');
-		}
-
-		$user = new User(
-			$dto->name,
-			$dto->surname,
-			$dto->email,
-			$dto->username,
-			password_hash($dto->password, PASSWORD_DEFAULT)
-		);
-
-
+        $user = new User(
+            $dto->name,
+            $dto->surname,
+            $dto->email,
+            $dto->username,
+            password_hash($dto->password, PASSWORD_DEFAULT)
+        );
 
 
-		$this->em->persist($user);
-		$this->em->flush($user);
 
-		return $user;
-	}
 
-	/**
-	 * Update user from data provided in the request body. Product is identified by product ID, partial user data update
-	 * is supported
-	 * @param int $id User ID
-	 * @param UpdateUserReqDto $dto Data from the request body
-	 * @return User User Entity
-	 */
-	public function update(int $id, UpdateUserReqDto $dto): User
-	{
-		$user = $this->em->getRepository(User::class)->find($id);
+        $this->em->persist($user);
+        $this->em->flush($user);
 
-		if ($user === null) {
-			throw new EntityNotFoundException();
-		}
+        return $user;
+    }
 
-		// Run checks whether properties were sent in request body and are different from persistent data
-		if ($dto->wasSet('name') && $dto->getName() !== null && $user->getName() !== $dto->getName()) {
-			$user->setName($dto->getName());
-		}
-		if ($dto->wasSet('surname') && $dto->getSurname() !== null && $user->getSurname() !== $dto->getSurname()) {
-			$user->setSurname($dto->getSurname());
-		}
-		if ($dto->wasSet('username') && $dto->getUsername() !== null && $user->getUsername() !== $dto->getUsername()) {
-			$user->setUsername($dto->getUsername());
-		}
-		if ($dto->wasSet('email') && $dto->getEmail() !== null && $user->getEmail() !== $dto->getEmail()) {
-			$user->setEmail($dto->getEmail());
-		}
-		if ($dto->wasSet('password') && $dto->getPassword() !== null && !password_verify($dto->getPassword(), $user->getPasswordHash())) {
-			$user->setPassword(password_hash($dto->getPassword(), PASSWORD_DEFAULT));
-		}
+    /**
+     * Update user from data provided in the request body. Product is identified by product ID, partial user data update
+     * is supported
+     *
+     * @param  int              $id  User ID
+     * @param  UpdateUserReqDto $dto Data from the request body
+     * @return User User Entity
+     */
+    public function update(int $id, UpdateUserReqDto $dto): User
+    {
+        $user = $this->em->getRepository(User::class)->find($id);
 
-		// If any of the data ware changed, persist data
-		if($user->isChanged()) {
-			$user->setUpdatedAt();
-			$this->em->persist($user);
-			$this->em->flush();
-		}
+        if ($user === null) {
+            throw new EntityNotFoundException();
+        }
 
-		return $user;
-	}
+        // Run checks whether properties were sent in request body and are different from persistent data
+        if ($dto->wasSet('name') && $dto->getName() !== null && $user->getName() !== $dto->getName()) {
+            $user->setName($dto->getName());
+        }
+        if ($dto->wasSet('surname') && $dto->getSurname() !== null && $user->getSurname() !== $dto->getSurname()) {
+            $user->setSurname($dto->getSurname());
+        }
+        if ($dto->wasSet('username') && $dto->getUsername() !== null && $user->getUsername() !== $dto->getUsername()) {
+            $user->setUsername($dto->getUsername());
+        }
+        if ($dto->wasSet('email') && $dto->getEmail() !== null && $user->getEmail() !== $dto->getEmail()) {
+            $user->setEmail($dto->getEmail());
+        }
+        if ($dto->wasSet('password') && $dto->getPassword() !== null && !password_verify($dto->getPassword(), $user->getPasswordHash())) {
+            $user->setPassword(password_hash($dto->getPassword(), PASSWORD_DEFAULT));
+        }
 
+        // If any of the data ware changed, persist data
+        if ($user->isChanged()) {
+            $user->setUpdatedAt();
+            $this->em->persist($user);
+            $this->em->flush();
+        }
+
+        return $user;
+    }
 }

@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Model\Utils;
 
@@ -9,5 +11,4 @@ use Contributte\Utils\DateTime as ContributteDateTime;
  */
 final class DateTime extends ContributteDateTime
 {
-
 }

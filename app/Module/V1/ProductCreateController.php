@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Module\V1;
 
@@ -29,37 +31,37 @@ use Nette\Http\IResponse;
  */
 class ProductCreateController extends BaseV1Controller
 {
+    private ProductsFacade $productsFacade;
 
-	private ProductsFacade $productsFacade;
+    public function __construct(ProductsFacade $productsFacade)
+    {
+        $this->productsFacade = $productsFacade;
+    }
 
-	public function __construct(ProductsFacade $productsFacade)
-	{
-		$this->productsFacade = $productsFacade;
-	}
+    /**
+     * @Apitte\OpenApi("
+     *   summary: Create new product
+     * ")
+     * @Apitte\Path("/create")
+     * @Apitte\Method("POST")
+     * @Apitte\RequestBody(entity="App\Domain\Api\Request\CreateProductReqDto")
+     */
+    public function create(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        /**
+ * @var CreateProductReqDto $dto 
+*/
+        $dto = $request->getParsedBody();
 
-	/**
-	 * @Apitte\OpenApi("
-	 *   summary: Create new product
-	 * ")
-	 * @Apitte\Path("/create")
-	 * @Apitte\Method("POST")
-	 * @Apitte\RequestBody(entity="App\Domain\Api\Request\CreateProductReqDto")
-	 */
-	public function create(ApiRequest $request, ApiResponse $response): ApiResponse
-	{
-		/** @var CreateProductReqDto $dto */
-		$dto = $request->getParsedBody();
+        try {
+            $this->productsFacade->create($dto);
 
-		try {
-			$this->productsFacade->create($dto);
-
-			return $response->withStatus(IResponse::S201_Created)
-				->withHeader('Content-Type', 'application/json');
-		} catch (DriverException $e) {
-			throw ServerErrorException::create()
-				->withMessage('Cannot create product')
-				->withPrevious($e);
-		}
-	}
-
+            return $response->withStatus(IResponse::S201_Created)
+                ->withHeader('Content-Type', 'application/json');
+        } catch (DriverException $e) {
+            throw ServerErrorException::create()
+                ->withMessage('Cannot create product')
+                ->withPrevious($e);
+        }
+    }
 }

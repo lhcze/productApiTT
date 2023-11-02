@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Module\V1;
 
@@ -29,37 +31,37 @@ use Nette\Http\IResponse;
  */
 class UserCreateController extends BaseV1Controller
 {
+    private UsersFacade $usersFacade;
 
-	private UsersFacade $usersFacade;
+    public function __construct(UsersFacade $usersFacade)
+    {
+        $this->usersFacade = $usersFacade;
+    }
 
-	public function __construct(UsersFacade $usersFacade)
-	{
-		$this->usersFacade = $usersFacade;
-	}
+    /**
+     * @Apitte\OpenApi("
+     *   summary: Create new user.
+     * ")
+     * @Apitte\Path("/create")
+     * @Apitte\Method("POST")
+     * @Apitte\RequestBody(entity="App\Domain\Api\Request\CreateUserReqDto")
+     */
+    public function create(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        /**
+ * @var CreateUserReqDto $dto 
+*/
+        $dto = $request->getParsedBody();
 
-	/**
-	 * @Apitte\OpenApi("
-	 *   summary: Create new user.
-	 * ")
-	 * @Apitte\Path("/create")
-	 * @Apitte\Method("POST")
-	 * @Apitte\RequestBody(entity="App\Domain\Api\Request\CreateUserReqDto")
-	 */
-	public function create(ApiRequest $request, ApiResponse $response): ApiResponse
-	{
-		/** @var CreateUserReqDto $dto */
-		$dto = $request->getParsedBody();
+        try {
+            $this->usersFacade->create($dto);
 
-		try {
-			$this->usersFacade->create($dto);
-
-			return $response->withStatus(IResponse::S201_Created)
-				->withHeader('Content-Type', 'application/json');
-		} catch (DriverException $e) {
-			throw ServerErrorException::create()
-				->withMessage('Cannot create user')
-				->withPrevious($e);
-		}
-	}
-
+            return $response->withStatus(IResponse::S201_Created)
+                ->withHeader('Content-Type', 'application/json');
+        } catch (DriverException $e) {
+            throw ServerErrorException::create()
+                ->withMessage('Cannot create user')
+                ->withPrevious($e);
+        }
+    }
 }

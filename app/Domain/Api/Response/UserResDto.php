@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Domain\Api\Response;
 
@@ -7,36 +9,34 @@ use DateTimeInterface;
 
 final class UserResDto
 {
+    public int $id;
 
-	public int $id;
+    public string $email;
 
-	public string $email;
+    public string $name;
 
-	public string $name;
+    public string $surname;
 
-	public string $surname;
+    public string $fullname;
 
-	public string $fullname;
+    public ?DateTimeInterface $createdAt = null;
 
-	public ?DateTimeInterface $createdAt = null;
+    public ?DateTimeInterface $updatedAt = null;
 
-	public ?DateTimeInterface $updatedAt = null;
+    public ?DateTimeInterface $lastLoggedAt = null;
 
-	public ?DateTimeInterface $lastLoggedAt = null;
+    public static function from(User $user): self
+    {
+        $self = new self();
+        $self->id = $user->getId();
+        $self->email = $user->getEmail();
+        $self->name = $user->getName();
+        $self->surname = $user->getSurname();
+        $self->fullname = $user->getFullname();
+        $self->createdAt = $user->getCreatedAt();
+        $self->updatedAt = $user->getUpdatedAt();
+        $self->lastLoggedAt = $user->getLastLoggedAt();
 
-	public static function from(User $user): self
-	{
-		$self = new self();
-		$self->id = $user->getId();
-		$self->email = $user->getEmail();
-		$self->name = $user->getName();
-		$self->surname = $user->getSurname();
-		$self->fullname = $user->getFullname();
-		$self->createdAt = $user->getCreatedAt();
-		$self->updatedAt = $user->getUpdatedAt();
-		$self->lastLoggedAt = $user->getLastLoggedAt();
-
-		return $self;
-	}
-
+        return $self;
+    }
 }

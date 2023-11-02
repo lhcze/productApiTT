@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Module\V1;
 
@@ -31,41 +33,35 @@ use Nette\Http\IResponse;
  */
 class ProductDeleteController extends BaseV1Controller
 {
+    private ProductsFacade $productsFacade;
 
-	private ProductsFacade $productsFacade;
+    public function __construct(ProductsFacade $productsFacade)
+    {
+        $this->productsFacade = $productsFacade;
+    }
 
-	public function __construct(ProductsFacade $productsFacade)
-	{
-		$this->productsFacade = $productsFacade;
-	}
+    /**
+     * @Apitte\OpenApi("
+     *   summary: Delete specified product
+     * ")
+     * @Apitte\Path("/delete/{id}")
+     * @Apitte\Method("DELETE")
+     */
+    public function delete(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        try {
+            $this->productsFacade->delete(Caster::toInt($request->getParameter('id')));
 
-	/**
-	 * @Apitte\OpenApi("
-	 *   summary: Delete specified product
-	 * ")
-	 * @Apitte\Path("/delete/{id}")
-	 * @Apitte\Method("DELETE")
-	 */
-	public function delete(ApiRequest $request, ApiResponse $response): ApiResponse
-	{
-		try {
-			$this->productsFacade->delete(Caster::toInt($request->getParameter('id')));
-
-			return $response->withStatus(IResponse::S200_OK)
-				->withHeader('Content-Type', 'application/json');
-
-		} catch (DriverException $e) {
-			throw ServerErrorException::create()
-				->withMessage('Cannot delete product')
-				->withPrevious($e);
-
-		} catch (EntityNotFoundException $e) {
-			throw ClientErrorException::create()
-				->withMessage('Product not found')
-				->withCode(IResponse::S404_NotFound);
-
-		}
-
-	}
-
+            return $response->withStatus(IResponse::S200_OK)
+                ->withHeader('Content-Type', 'application/json');
+        } catch (DriverException $e) {
+            throw ServerErrorException::create()
+                ->withMessage('Cannot delete product')
+                ->withPrevious($e);
+        } catch (EntityNotFoundException $e) {
+            throw ClientErrorException::create()
+                ->withMessage('Product not found')
+                ->withCode(IResponse::S404_NotFound);
+        }
+    }
 }

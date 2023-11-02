@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Model\Database\Entity;
 
@@ -7,24 +9,24 @@ use Doctrine\ORM\Mapping as ORM;
 
 trait TCreatedAt
 {
+    /**
+     * @ORM\Column(type="datetime", nullable=FALSE) 
+     */
+    protected DateTime $createdAt;
 
-	/** @ORM\Column(type="datetime", nullable=FALSE) */
-	protected DateTime $createdAt;
+    public function getCreatedAt(): DateTime
+    {
+        return $this->createdAt;
+    }
 
-	public function getCreatedAt(): DateTime
-	{
-		return $this->createdAt;
-	}
-
-	/**
-	 * Doctrine annotation
-	 *
-	 * @ORM\PrePersist
-	 * @internal
-	 */
-	public function setCreatedAt(): void
-	{
-		$this->createdAt = new DateTime();
-	}
-
+    /**
+     * Doctrine annotation
+     *
+     * @ORM\PrePersist
+     * @internal
+     */
+    public function setCreatedAt(): void
+    {
+        $this->createdAt = new DateTime();
+    }
 }

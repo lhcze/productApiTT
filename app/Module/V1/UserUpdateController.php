@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Module\V1;
 
@@ -33,45 +35,41 @@ use Nette\Http\IResponse;
  */
 class UserUpdateController extends BaseV1Controller
 {
+    private UsersFacade $usersFacade;
 
-	private UsersFacade $usersFacade;
+    public function __construct(UsersFacade $usersFacade)
+    {
+        $this->usersFacade = $usersFacade;
+    }
 
-	public function __construct(UsersFacade $usersFacade)
-	{
-		$this->usersFacade = $usersFacade;
-	}
+    /**
+     * @Apitte\OpenApi("
+     *   summary: Update user
+     * ")
+     * @Apitte\Path("/update/{id}")
+     * @Apitte\Method("PATCH")
+     * @Apitte\RequestBody(entity="App\Domain\Api\Request\UpdateUserReqDto")
+     */
+    public function update(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        /**
+ * @var UpdateUserReqDto $dto 
+*/
+        $dto = $request->getParsedBody();
 
-	/**
-	 * @Apitte\OpenApi("
-	 *   summary: Update user
-	 * ")
-	 * @Apitte\Path("/update/{id}")
-	 * @Apitte\Method("PATCH")
-	 * @Apitte\RequestBody(entity="App\Domain\Api\Request\UpdateUserReqDto")
-	 */
-	public function update(ApiRequest $request, ApiResponse $response): ApiResponse
-	{
-		/** @var UpdateUserReqDto $dto */
-		$dto = $request->getParsedBody();
+        try {
+            $this->usersFacade->update(Caster::toInt($request->getParameter('id')), $dto);
 
-		try {
-			$this->usersFacade->update(Caster::toInt($request->getParameter('id')), $dto);
-
-			return $response->withStatus(IResponse::S200_OK)
-				->withHeader('Content-Type', 'application/json');
-
-		} catch (DriverException $e) {
-			throw ServerErrorException::create()
-				->withMessage('Cannot update user')
-				->withPrevious($e);
-
-		} catch (EntityNotFoundException $e) {
-			throw ClientErrorException::create()
-				->withMessage('User not found')
-				->withCode(IResponse::S404_NotFound);
-
-		}
-
-	}
-
+            return $response->withStatus(IResponse::S200_OK)
+                ->withHeader('Content-Type', 'application/json');
+        } catch (DriverException $e) {
+            throw ServerErrorException::create()
+                ->withMessage('Cannot update user')
+                ->withPrevious($e);
+        } catch (EntityNotFoundException $e) {
+            throw ClientErrorException::create()
+                ->withMessage('User not found')
+                ->withCode(IResponse::S404_NotFound);
+        }
+    }
 }

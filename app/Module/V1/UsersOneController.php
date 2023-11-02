@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Module\V1;
 
@@ -29,54 +31,52 @@ use Nette\Http\IResponse;
  */
 class UsersOneController extends BaseV1Controller
 {
+    private UsersFacade $usersFacade;
 
-	private UsersFacade $usersFacade;
+    public function __construct(UsersFacade $usersFacade)
+    {
+        $this->usersFacade = $usersFacade;
+    }
 
-	public function __construct(UsersFacade $usersFacade)
-	{
-		$this->usersFacade = $usersFacade;
-	}
+    /**
+     * @Apitte\OpenApi("
+     *   summary: Get user by email
+     * ")
+     * @Apitte\Path("/email")
+     * @Apitte\Method("GET")
+     * @Apitte\RequestParameters({
+     * @Apitte\RequestParameter(name="email", in="query", type="string", description="User e-mail address")
+     * })
+     */
+    public function byEmail(ApiRequest $request): UserResDto
+    {
+        try {
+            return $this->usersFacade->findOneBy(['email' => $request->getParameter('email')]);
+        } catch (EntityNotFoundException $e) {
+            throw ClientErrorException::create()
+                ->withMessage('User not found')
+                ->withCode(IResponse::S404_NotFound);
+        }
+    }
 
-	/**
-	 * @Apitte\OpenApi("
-	 *   summary: Get user by email
-	 * ")
-	 * @Apitte\Path("/email")
-	 * @Apitte\Method("GET")
-	 * @Apitte\RequestParameters({
-	 *      @Apitte\RequestParameter(name="email", in="query", type="string", description="User e-mail address")
-	 * })
-	 */
-	public function byEmail(ApiRequest $request): UserResDto
-	{
-		try {
-			return $this->usersFacade->findOneBy(['email' => $request->getParameter('email')]);
-		} catch (EntityNotFoundException $e) {
-			throw ClientErrorException::create()
-				->withMessage('User not found')
-				->withCode(IResponse::S404_NotFound);
-		}
-	}
-
-	/**
-	 * @Apitte\OpenApi("
-	 *   summary: Get user by id
-	 * ")
-	 * @Apitte\Path("/{id}")
-	 * @Apitte\Method("GET")
-	 * @Apitte\RequestParameters({
-	 *      @Apitte\RequestParameter(name="id", in="path", type="int", description="User ID")
-	 * })
-	 */
-	public function byId(ApiRequest $request): UserResDto
-	{
-		try {
-			return $this->usersFacade->findOne(Caster::toInt($request->getParameter('id')));
-		} catch (EntityNotFoundException $e) {
-			throw ClientErrorException::create()
-				->withMessage('User not found')
-				->withCode(IResponse::S404_NotFound);
-		}
-	}
-
+    /**
+     * @Apitte\OpenApi("
+     *   summary: Get user by id
+     * ")
+     * @Apitte\Path("/{id}")
+     * @Apitte\Method("GET")
+     * @Apitte\RequestParameters({
+     * @Apitte\RequestParameter(name="id", in="path", type="int", description="User ID")
+     * })
+     */
+    public function byId(ApiRequest $request): UserResDto
+    {
+        try {
+            return $this->usersFacade->findOne(Caster::toInt($request->getParameter('id')));
+        } catch (EntityNotFoundException $e) {
+            throw ClientErrorException::create()
+                ->withMessage('User not found')
+                ->withCode(IResponse::S404_NotFound);
+        }
+    }
 }

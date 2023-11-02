@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Module\V1;
 
@@ -26,32 +28,30 @@ use App\Model\Utils\Caster;
  */
 class UsersController extends BaseV1Controller
 {
+    private UsersFacade $usersFacade;
 
-	private UsersFacade $usersFacade;
+    public function __construct(UsersFacade $usersFacade)
+    {
+        $this->usersFacade = $usersFacade;
+    }
 
-	public function __construct(UsersFacade $usersFacade)
-	{
-		$this->usersFacade = $usersFacade;
-	}
-
-	/**
-	 * @Apitte\OpenApi("
-	 *   summary: List users.
-	 * ")
-	 * @Apitte\Path("/")
-	 * @Apitte\Method("GET")
-	 * @Apitte\RequestParameters({
-	 * 		@Apitte\RequestParameter(name="limit", type="int", in="query", required=false, description="Data limit"),
-	 * 		@Apitte\RequestParameter(name="offset", type="int", in="query", required=false, description="Data offset")
-	 * })
-	 * @return UserResDto[]
-	 */
-	public function index(ApiRequest $request): array
-	{
-		return $this->usersFacade->findAll(
-			Caster::toInt($request->getParameter('limit', 10)),
-			Caster::toInt($request->getParameter('offset', 0))
-		);
-	}
-
+    /**
+     * @Apitte\OpenApi("
+     *   summary: List users.
+     * ")
+     * @Apitte\Path("/")
+     * @Apitte\Method("GET")
+     * @Apitte\RequestParameters({
+     * @Apitte\RequestParameter(name="limit",  type="int", in="query", required=false, description="Data limit"),
+     * @Apitte\RequestParameter(name="offset", type="int", in="query", required=false, description="Data offset")
+     * })
+     * @return                                 UserResDto[]
+     */
+    public function index(ApiRequest $request): array
+    {
+        return $this->usersFacade->findAll(
+            Caster::toInt($request->getParameter('limit', 10)),
+            Caster::toInt($request->getParameter('offset', 0))
+        );
+    }
 }

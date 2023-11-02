@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Module\V1;
 
@@ -32,47 +34,43 @@ use Nette\Http\IResponse;
  */
 class ProductUpdateController extends BaseV1Controller
 {
+    private ProductsFacade $productsFacade;
 
-	private ProductsFacade $productsFacade;
+    public function __construct(ProductsFacade $productsFacade)
+    {
+        $this->productsFacade = $productsFacade;
+    }
 
-	public function __construct(ProductsFacade $productsFacade)
-	{
-		$this->productsFacade = $productsFacade;
-	}
+    /**
+     * @Apitte\OpenApi("
+     *   summary: Update product
+     * ")
+     * @Apitte\Path("/update/{id}")
+     * @Apitte\Method("PATCH")
+     * @Apitte\RequestBody(entity="App\Domain\Api\Request\UpdateProductReqDto")
+     */
+    public function update(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        /**
+ * @var UpdateProductReqDto $dto 
+*/
+        $dto = $request->getParsedBody();
 
-	/**
-	 * @Apitte\OpenApi("
-	 *   summary: Update product
-	 * ")
-	 * @Apitte\Path("/update/{id}")
-	 * @Apitte\Method("PATCH")
-	 * @Apitte\RequestBody(entity="App\Domain\Api\Request\UpdateProductReqDto")
-	 */
-	public function update(ApiRequest $request, ApiResponse $response): ApiResponse
-	{
-		/** @var UpdateProductReqDto $dto */
-		$dto = $request->getParsedBody();
+        try {
+            // Attempt to update product from API request body
+            $this->productsFacade->update(Caster::toInt($request->getParameter('id')), $dto);
 
-		try {
-			// Attempt to update product from API request body
-			$this->productsFacade->update(Caster::toInt($request->getParameter('id')), $dto);
-
-			// Update worked out, return 200 OK
-			return $response->withStatus(IResponse::S200_OK)
-				->withHeader('Content-Type', 'application/json');
-
-		} catch (DriverException $e) {
-			throw ServerErrorException::create()
-				->withMessage('Cannot update product')
-				->withPrevious($e);
-
-		} catch (EntityNotFoundException $e) {
-			throw ClientErrorException::create()
-				->withMessage('Product not found')
-				->withCode(IResponse::S404_NotFound);
-
-		}
-
-	}
-
+            // Update worked out, return 200 OK
+            return $response->withStatus(IResponse::S200_OK)
+                ->withHeader('Content-Type', 'application/json');
+        } catch (DriverException $e) {
+            throw ServerErrorException::create()
+                ->withMessage('Cannot update product')
+                ->withPrevious($e);
+        } catch (EntityNotFoundException $e) {
+            throw ClientErrorException::create()
+                ->withMessage('Product not found')
+                ->withCode(IResponse::S404_NotFound);
+        }
+    }
 }

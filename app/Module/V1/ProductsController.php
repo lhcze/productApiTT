@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Module\V1;
 
@@ -29,43 +31,37 @@ use Doctrine\DBAL\Exception\DriverException;
  */
 class ProductsController extends BaseV1Controller
 {
+    private ProductsFacade $productsFacade;
 
-	private ProductsFacade $productsFacade;
+    public function __construct(ProductsFacade $productsFacade)
+    {
+        $this->productsFacade = $productsFacade;
+    }
 
-	public function __construct(ProductsFacade $productsFacade)
-	{
-		$this->productsFacade = $productsFacade;
-	}
+    /**
+     * @Apitte\OpenApi("
+     *   summary: List Products
+     * ")
+     * @Apitte\Path("/")
+     * @Apitte\Method("GET")
+     * @Apitte\RequestParameters({
+     * @Apitte\RequestParameter(name="limit",  type="int", in="query", required=false, description="Data limit"),
+     * @Apitte\RequestParameter(name="offset", type="int", in="query", required=false, description="Data offset")
+     * })
+     * @return                                 array<string, ProductResDto>
+     */
+    public function index(ApiRequest $request): array
+    {
 
-	/**
-	 * @Apitte\OpenApi("
-	 *   summary: List Products
-	 * ")
-	 * @Apitte\Path("/")
-	 * @Apitte\Method("GET")
-	 * @Apitte\RequestParameters({
-	 * 		@Apitte\RequestParameter(name="limit", type="int", in="query", required=false, description="Data limit"),
-	 * 		@Apitte\RequestParameter(name="offset", type="int", in="query", required=false, description="Data offset")
-	 * })
-	 * @return array<string, ProductResDto>
-	 */
-	public function index(ApiRequest $request): array
-	{
-
-		try {
-			return $this->productsFacade->findAll(
-				Caster::toInt($request->getParameter('limit', 10)),
-				Caster::toInt($request->getParameter('offset', 0))
-			);
-
-		} catch (DriverException $e) {
-			throw ServerErrorException::create()
-				->withMessage('Cannot list products')
-				->withPrevious($e);
-
-		}
-
-
-	}
-
+        try {
+            return $this->productsFacade->findAll(
+                Caster::toInt($request->getParameter('limit', 10)),
+                Caster::toInt($request->getParameter('offset', 0))
+            );
+        } catch (DriverException $e) {
+            throw ServerErrorException::create()
+                ->withMessage('Cannot list products')
+                ->withPrevious($e);
+        }
+    }
 }

@@ -1,4 +1,6 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\Module\V1;
 
@@ -11,5 +13,4 @@ use App\Module\BaseController;
  */
 abstract class BaseV1Controller extends BaseController
 {
-
 }
